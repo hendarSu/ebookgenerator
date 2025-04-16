@@ -63,8 +63,7 @@
     "@supabase/supabase-js": "latest",
     "jspdf": "latest",
     "html2canvas": "latest",
-    "uuid": "latest",
-    "crypto": "latest"
+    "uuid": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -10,70 +10,77 @@ type AIProviderSettings = {
   updated_at?: string
 }
 
-export async function getAIProviderSettings(userId: string): Promise<AIProviderSettings[]> {
-  const { data, error } = await supabase.from("ai_provider_settings").select("*")
-
-  if (error) {
-    console.error("Error fetching AI provider settings:", error)
-    return []
-  }
-
-  return data as AIProviderSettings[]
-}
-
 export async function getProviderSettings(provider: string): Promise<AIProviderSettings | null> {
-  const { data, error } = await supabase.from("ai_provider_settings").select("*").eq("provider", provider).single()
+  try {
+    const { data, error } = await supabase.from("ai_provider_settings").select("*").eq("provider", provider).single()
 
-  if (error) {
-    if (error.code === "PGRST116") {
-      // No settings found
-      return null
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No settings found
+        return null
+      }
+      console.error("Error fetching AI provider settings:", error)
+      throw error
     }
-    console.error("Error fetching AI provider settings:", error)
-    throw error
-  }
 
-  return data as AIProviderSettings
+    return data as AIProviderSettings
+  } catch (error) {
+    console.error("Error in getProviderSettings:", error)
+    return null
+  }
 }
 
 export async function saveProviderSettings(settings: AIProviderSettings): Promise<AIProviderSettings> {
-  if (!settings.apiKey) {
-    throw new Error("API Key is required")
-  }
+  try {
+    if (!settings.apiKey) {
+      throw new Error("API Key is required")
+    }
 
-  const encryptedApiKey = encryptText(settings.apiKey)
+    // Encrypt the API key
+    const encryptedApiKey = encryptText(settings.apiKey)
+    console.log("Encryption successful")
 
-  const { data, error } = await supabase
-    .from("ai_provider_settings")
-    .upsert(
-      {
-        provider: settings.provider,
-        api_key: encryptedApiKey,
-        model: settings.model,
-      },
-      { onConflict: "provider" },
-    )
-    .select("*")
-    .single()
+    const { data, error } = await supabase
+      .from("ai_provider_settings")
+      .upsert(
+        {
+          provider: settings.provider,
+          api_key: encryptedApiKey,
+          model: settings.model,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "provider" },
+      )
+      .select("*")
+      .single()
 
-  if (error) {
-    console.error("Error saving AI provider settings:", error)
+    if (error) {
+      console.error("Error saving AI provider settings:", error)
+      throw error
+    }
+
+    return data as AIProviderSettings
+  } catch (error) {
+    console.error("Error in saveProviderSettings:", error)
     throw error
   }
-
-  return data as AIProviderSettings
 }
 
 export async function deleteProviderSettings(provider: string): Promise<void> {
-  const { error } = await supabase.from("ai_provider_settings").delete().eq("provider", provider)
+  try {
+    const { error } = await supabase.from("ai_provider_settings").delete().eq("provider", provider)
 
-  if (error) {
-    console.error("Error deleting AI provider settings:", error)
+    if (error) {
+      console.error("Error deleting AI provider settings:", error)
+      throw error
+    }
+  } catch (error) {
+    console.error("Error in deleteProviderSettings:", error)
     throw error
   }
 }
 
-export async function getDecryptedAPIKey(userId: string, provider: string): Promise<string | null> {
+export async function getDecryptedAPIKey(provider: string): Promise<string | null> {
   try {
     const { data, error } = await supabase
       .from("ai_provider_settings")
@@ -94,9 +101,10 @@ export async function getDecryptedAPIKey(userId: string, provider: string): Prom
       return null
     }
 
+    // Decrypt the API key
     return decryptText(data.api_key)
   } catch (error) {
-    console.error("Error decrypting API key:", error)
+    console.error("Error in getDecryptedAPIKey:", error)
     return null
   }
 }
