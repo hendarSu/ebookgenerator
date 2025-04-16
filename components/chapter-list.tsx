@@ -124,4 +124,3 @@ export function ChapterList({ projectId, chapters: initialChapters, isOwner = tr
     </div>
   )
 }
-

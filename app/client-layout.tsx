@@ -26,4 +26,3 @@ export default function ClientLayout({
     </AuthProvider>
   )
 }
-

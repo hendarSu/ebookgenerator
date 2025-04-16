@@ -90,4 +90,3 @@ export interface Database {
     }
   }
 }
-

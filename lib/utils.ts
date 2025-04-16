@@ -17,4 +17,3 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i]
 }
-

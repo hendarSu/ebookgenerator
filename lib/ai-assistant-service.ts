@@ -1,5 +1,6 @@
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
+import { getDecryptedAPIKey } from "./ai-provider-service"
 
 export type AssistantMode = "writer" | "editor" | "researcher" | "summarizer" | "translator"
 
@@ -8,6 +9,8 @@ export async function streamAssistantResponse(
   mode: AssistantMode,
   context: string | undefined,
   onChunk: (chunk: string) => void,
+  userId: string,
+  provider: "openai" | "gemini" = "openai",
 ) {
   let fullPrompt = `You are a helpful AI assistant. Your current mode is ${mode}.`
 
@@ -19,8 +22,19 @@ export async function streamAssistantResponse(
   fullPrompt += `\n\nResponse:`
 
   try {
+    // Get the decrypted API key for the specified provider
+    const apiKey = await getDecryptedAPIKey(userId, provider)
+
+    if (!apiKey) {
+      throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
+    }
+
+    // Currently only supporting OpenAI
+    // We'll use OpenAI for both providers until Gemini is properly supported
+    const model = openai("gpt-4o", { apiKey })
+
     const response = await generateText({
-      model: openai("gpt-4o"),
+      model,
       prompt: fullPrompt,
       temperature: 0.7,
       onStream: (chunk) => {
@@ -35,7 +49,14 @@ export async function streamAssistantResponse(
   }
 }
 
-export async function generateChapterIdeas(bookTitle: string, bookDescription: string, chapterCount = 5) {
+// Update other functions similarly to use the decrypted API key
+export async function generateChapterIdeas(
+  bookTitle: string,
+  bookDescription: string,
+  userId: string,
+  provider: "openai" | "gemini" = "openai",
+  chapterCount = 5,
+) {
   const prompt = `
     Create an outline for a book titled "${bookTitle}" about "${bookDescription}".
     Generate ${chapterCount} chapters with titles and brief descriptions.
@@ -44,8 +65,18 @@ export async function generateChapterIdeas(bookTitle: string, bookDescription: s
   `
 
   try {
+    // Get the decrypted API key
+    const apiKey = await getDecryptedAPIKey(userId, provider)
+
+    if (!apiKey) {
+      throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
+    }
+
+    // Currently only supporting OpenAI
+    const model = openai("gpt-4o", { apiKey })
+
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model,
       prompt,
       temperature: 0.7,
     })
@@ -63,7 +94,12 @@ export async function generateChapterIdeas(bookTitle: string, bookDescription: s
   }
 }
 
-export async function improveText(text: string, instruction: string) {
+export async function improveText(
+  text: string,
+  instruction: string,
+  userId: string,
+  provider: "openai" | "gemini" = "openai",
+) {
   const prompt = `
     Improve the following text according to this instruction: "${instruction}"
     
@@ -74,8 +110,18 @@ export async function improveText(text: string, instruction: string) {
   `
 
   try {
+    // Get the decrypted API key
+    const apiKey = await getDecryptedAPIKey(userId, provider)
+
+    if (!apiKey) {
+      throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
+    }
+
+    // Currently only supporting OpenAI
+    const model = openai("gpt-4o", { apiKey })
+
     const { text: improvedText } = await generateText({
-      model: openai("gpt-4o"),
+      model,
       prompt,
       temperature: 0.7,
     })
@@ -87,10 +133,20 @@ export async function improveText(text: string, instruction: string) {
   }
 }
 
-export async function generateContent(prompt: string) {
+export async function generateContent(prompt: string, userId: string, provider: "openai" | "gemini" = "openai") {
   try {
+    // Get the decrypted API key
+    const apiKey = await getDecryptedAPIKey(userId, provider)
+
+    if (!apiKey) {
+      throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
+    }
+
+    // Currently only supporting OpenAI
+    const model = openai("gpt-4o", { apiKey })
+
     const { text } = await generateText({
-      model: openai("gpt-4o"),
+      model,
       prompt,
       temperature: 0.7,
     })
@@ -101,4 +157,3 @@ export async function generateContent(prompt: string) {
     return "Content generation failed. Please try again."
   }
 }
-

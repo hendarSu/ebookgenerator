@@ -98,4 +98,3 @@ export async function updateUserTheme(userId: string, theme: string): Promise<bo
     return false
   }
 }
-

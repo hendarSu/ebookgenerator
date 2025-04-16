@@ -134,4 +134,3 @@ export async function uploadCoverImage(file: File, userId: string): Promise<stri
 export async function deleteCoverImage(url: string) {
   return deleteFile(url, STORAGE_BUCKETS.COVERS)
 }
-

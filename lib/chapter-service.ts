@@ -86,4 +86,3 @@ export async function reorderChapters(projectId: string, orderedIds: string[]) {
 
   return true
 }
-

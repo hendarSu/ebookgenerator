@@ -196,4 +196,3 @@ export async function exportElementToPDF(element: HTMLElement, filename: string)
   // Save the PDF
   pdf.save(filename)
 }
-

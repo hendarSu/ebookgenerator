@@ -323,4 +323,3 @@ export default function ChapterPage({ params }: ChapterPageProps) {
     </div>
   )
 }
-

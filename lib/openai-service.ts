@@ -52,4 +52,3 @@ export async function generateChapterContent(chapterTitle: string, chapterDescri
     throw error
   }
 }
-

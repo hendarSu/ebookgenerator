@@ -102,4 +102,3 @@ export function DeleteProjectDialog({ projectId, projectTitle }: DeleteProjectDi
     </AlertDialog>
   )
 }
-

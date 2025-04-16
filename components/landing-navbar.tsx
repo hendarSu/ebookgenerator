@@ -175,4 +175,3 @@ export function LandingNavbar() {
     </header>
   )
 }
-

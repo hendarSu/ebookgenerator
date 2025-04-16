@@ -119,4 +119,3 @@ export async function getFileMetadata(bucket: string, path: string) {
 
   return data
 }
-

@@ -10,4 +10,3 @@ export function ConditionalPadding({ children }: { children: React.ReactNode }) 
 
   return <div className={isHomePage ? "" : isLoginPage ? "" : "pt-10" }>{children}</div>
 }
-

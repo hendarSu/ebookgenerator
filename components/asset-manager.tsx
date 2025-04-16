@@ -204,4 +204,3 @@ export function AssetManager({ projectId, onSelectAsset }: AssetManagerProps) {
     </Card>
   )
 }
-

@@ -143,4 +143,3 @@ export async function getBasicUserInfo(userId: string): Promise<UserProfile | nu
     return null
   }
 }
-

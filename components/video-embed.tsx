@@ -85,4 +85,3 @@ export function VideoEmbed({ url, title, className = "" }: VideoEmbedProps) {
     </div>
   )
 }
-

@@ -118,4 +118,3 @@ export function ChapterTableOfContents({ projectId, currentChapterId, chapters }
     </div>
   )
 }
-

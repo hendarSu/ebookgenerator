@@ -229,4 +229,3 @@ export default function NewChapterPage({ params }: NewChapterPageProps) {
     </div>
   )
 }
-
