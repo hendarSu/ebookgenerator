@@ -1,41 +1,27 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/context/auth-context"
-import { Toaster } from "@/components/ui/toaster"
-import { ConditionalNavbar } from "@/components/conditional-navbar"
-import { ConditionalPadding } from "@/components/conditional-padding"
+import { AuthProvider } from "../context/auth-context"
+import ClientLayout from "./ClientLayout"
 
-const inter = Inter({ subsets: ["latin"] })
-
-// Update the metadata title and description
 export const metadata: Metadata = {
-  title: "Sharebook",
-  description: "Create, manage, and share your ebooks by chapter",
+  title: "Sharebook - Create and Share Ebooks",
+  description: "Create, manage, and share your ebooks with the world",
   generator: "v0.dev",
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="en">
+      <body>
         <AuthProvider>
-          <ThemeProvider>
-            <ConditionalNavbar />
-            <ConditionalPadding>{children}</ConditionalPadding>
-            <Toaster />
-          </ThemeProvider>
+          <ClientLayout>{children}</ClientLayout>
         </AuthProvider>
       </body>
     </html>
   )
 }
-
-
-import './globals.css'

@@ -97,7 +97,7 @@ export default function NewProjectPage() {
   }
 
   const handleGenerate = async () => {
-    if (!prompt) return
+    if (!prompt || !user) return
 
     setLoading(true)
     try {
@@ -105,6 +105,8 @@ export default function NewProjectPage() {
       const chapterIdeas = await generateChapterIdeas(
         "Untitled Book", // We don't have a title yet
         prompt,
+        user.id,
+        "openai",
         chapterCount,
       )
 

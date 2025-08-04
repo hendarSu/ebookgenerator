@@ -44,6 +44,7 @@ export interface Database {
           order_index: number
           created_at: string
           updated_at: string
+          video_url?: string | null
         }
         Insert: {
           id?: string
@@ -53,6 +54,7 @@ export interface Database {
           order_index: number
           created_at?: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           id?: string
@@ -62,6 +64,7 @@ export interface Database {
           order_index?: number
           created_at?: string
           updated_at?: string
+          video_url?: string | null
         }
       }
       user_settings: {
@@ -83,6 +86,35 @@ export interface Database {
           user_id?: string
           theme?: string
           font_size?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ai_provider_settings: {
+        Row: {
+          id: string
+          user_id: string
+          provider: string
+          api_key: string | null
+          model: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: string
+          api_key?: string | null
+          model?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          provider?: string
+          api_key?: string | null
+          model?: string | null
           created_at?: string
           updated_at?: string
         }

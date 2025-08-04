@@ -1,27 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Book, ChevronRight, Feather, Globe, BookOpen, ArrowRight, Heart } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/context/auth-context"
 import { LandingNavbar } from "@/components/landing-navbar"
 
 export default function HomePage() {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
   const [mounted, setMounted] = useState(false)
 
+  // Use useEffect for client-side operations
   useEffect(() => {
     setMounted(true)
-    // If authenticated, redirect to projects
-    if (isAuthenticated) {
-      router.push("/projects")
-    }
-  }, [isAuthenticated, router])
+  }, [])
 
   // Show nothing during initial SSR to avoid hydration mismatch
   if (!mounted) return null

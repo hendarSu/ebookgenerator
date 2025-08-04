@@ -3,12 +3,10 @@
 import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/context/theme-context"
-import { useAuth } from "@/context/auth-context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
-  const { isAuthenticated } = useAuth()
 
   return (
     <DropdownMenu>
@@ -28,12 +26,10 @@ export function ThemeToggle() {
           Dark
           {theme === "dark" && " ✓"}
         </DropdownMenuItem>
-        {!isAuthenticated && (
-          <DropdownMenuItem onClick={() => setTheme("system")}>
-            System
-            {theme === "system" && " ✓"}
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          System
+          {theme === "system" && " ✓"}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

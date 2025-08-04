@@ -3,7 +3,7 @@
 import type React from "react"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ConditionalNavbar } from "@/components/conditional-navbar"
+import { Navbar } from "@/components/navbar"
 import { Toaster } from "@/components/ui/toaster"
 import { usePathname } from "next/navigation"
 
@@ -11,8 +11,10 @@ import { usePathname } from "next/navigation"
 function ConditionalPadding({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isHomePage = pathname === "/"
+  const isAuthPage =
+    pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || pathname === "/reset-password"
 
-  return <div className={isHomePage ? "" : "pt-14"}>{children}</div>
+  return <div className={isHomePage || isAuthPage ? "" : "pt-14"}>{children}</div>
 }
 
 export default function ClientLayout({
@@ -20,9 +22,14 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  const isHomePage = pathname === "/"
+  const isAuthPage =
+    pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || pathname === "/reset-password"
+
   return (
     <ThemeProvider>
-      <ConditionalNavbar />
+      {!isHomePage && !isAuthPage && <Navbar />}
       <ConditionalPadding>{children}</ConditionalPadding>
       <Toaster />
     </ThemeProvider>

@@ -29,27 +29,28 @@ export async function streamAssistantResponse(
       throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
     }
 
-    // Currently only supporting OpenAI
-    // We'll use OpenAI for both providers until Gemini is properly supported
+    console.log(`Using API key for ${provider}: ${apiKey ? "Key exists (not showing for security)" : "Key is empty"}`)
+
+    // Create the OpenAI model with the API key explicitly
     const model = openai("gpt-4o", { apiKey })
 
-    const response = await generateText({
+    // Generate text without streaming for simplicity
+    const { text } = await generateText({
       model,
       prompt: fullPrompt,
       temperature: 0.7,
-      onStream: (chunk) => {
-        onChunk(chunk)
-      },
     })
 
-    return response.text
+    // Call the onChunk callback with the full text
+    onChunk(text)
+
+    return text
   } catch (error) {
     console.error("Error streaming assistant response:", error)
     throw error
   }
 }
 
-// Update other functions similarly to use the decrypted API key
 export async function generateChapterIdeas(
   bookTitle: string,
   bookDescription: string,
@@ -65,14 +66,16 @@ export async function generateChapterIdeas(
   `
 
   try {
-    // Get the decrypted API key
+    // Get the decrypted API key for the specified provider
     const apiKey = await getDecryptedAPIKey(userId, provider)
 
     if (!apiKey) {
       throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
     }
 
-    // Currently only supporting OpenAI
+    console.log(`Using API key for ${provider}: ${apiKey ? "Key exists (not showing for security)" : "Key is empty"}`)
+
+    // Create the OpenAI model with the API key explicitly
     const model = openai("gpt-4o", { apiKey })
 
     const { text } = await generateText({
@@ -82,15 +85,17 @@ export async function generateChapterIdeas(
     })
 
     // Parse the JSON response
-    const chapters = JSON.parse(text)
-    return chapters
+    try {
+      const chapters = JSON.parse(text)
+      return chapters
+    } catch (parseError) {
+      console.error("Error parsing JSON response:", parseError)
+      console.log("Raw response:", text)
+      throw new Error("Failed to parse AI response. Please try again.")
+    }
   } catch (error) {
     console.error("Error generating chapter ideas:", error)
-    // Return a fallback set of chapters
-    return Array.from({ length: chapterCount }, (_, i) => ({
-      title: `Chapter ${i + 1}`,
-      description: "Chapter description will go here.",
-    }))
+    throw error
   }
 }
 
@@ -117,7 +122,9 @@ export async function improveText(
       throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
     }
 
-    // Currently only supporting OpenAI
+    console.log(`Using API key for ${provider}: ${apiKey ? "Key exists (not showing for security)" : "Key is empty"}`)
+
+    // Create the OpenAI model with the API key explicitly
     const model = openai("gpt-4o", { apiKey })
 
     const { text: improvedText } = await generateText({
@@ -129,7 +136,7 @@ export async function improveText(
     return improvedText
   } catch (error) {
     console.error("Error improving text:", error)
-    return text
+    throw error
   }
 }
 
@@ -142,7 +149,9 @@ export async function generateContent(prompt: string, userId: string, provider: 
       throw new Error(`No API key found for ${provider}. Please configure your API key in settings.`)
     }
 
-    // Currently only supporting OpenAI
+    console.log(`Using API key for ${provider}: ${apiKey ? "Key exists (not showing for security)" : "Key is empty"}`)
+
+    // Create the OpenAI model with the API key explicitly
     const model = openai("gpt-4o", { apiKey })
 
     const { text } = await generateText({
@@ -154,6 +163,6 @@ export async function generateContent(prompt: string, userId: string, provider: 
     return text
   } catch (error) {
     console.error("Error generating content:", error)
-    return "Content generation failed. Please try again."
+    throw error
   }
 }

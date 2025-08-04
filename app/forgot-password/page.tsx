@@ -12,24 +12,33 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { supabase } from "@/lib/supabase-client"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setLoading(true)
 
     try {
-      // In a real app, this would send a password reset email
-      // For demo purposes, we'll just simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      setSubmitted(true)
-    } catch (error) {
-      console.error("Error sending reset email:", error)
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (resetError) {
+        setError(resetError.message || "Failed to send reset email. Please try again.")
+      } else {
+        setSubmitted(true)
+      }
+    } catch (err) {
+      console.error("Password reset error:", err)
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -56,6 +65,12 @@ export default function ForgotPasswordPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               {submitted ? (
                 <Alert>
                   <AlertDescription>

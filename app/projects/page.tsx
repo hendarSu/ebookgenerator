@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, Search } from "lucide-react"
 import { ProjectList } from "@/components/project-list"
-import { useAuth } from "@/context/auth-context"
+import { useAuth } from "../../context/auth-context"
 import { Input } from "@/components/ui/input"
 
 export default function ProjectsPage() {

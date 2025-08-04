@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Eye, EyeOff, Lock, Mail } from "lucide-react"
+import { Eye, EyeOff, Lock, Mail, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,15 +15,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "../../context/auth-context"
 import { useToast } from "@/hooks/use-toast"
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter()
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated, signup } = useAuth()
   const { toast } = useToast()
+  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   // Redirect to projects if already authenticated
   useEffect(() => {
@@ -37,20 +39,27 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    try {
-      const { error: loginError } = await login(email, password)
+    // Basic validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      setLoading(false)
+      return
+    }
 
-      if (loginError) {
-        setError(loginError.message || "Failed to login. Please check your credentials.")
+    try {
+      const { error: signupError } = await signup(email, password, fullName)
+
+      if (signupError) {
+        setError(signupError.message || "Failed to create account. Please try again.")
       } else {
+        setSuccess(true)
         toast({
-          title: "Login successful",
-          description: "Welcome back!",
+          title: "Account created",
+          description: "Your account has been created successfully. Please check your email for verification.",
         })
-        router.push("/projects")
       }
     } catch (err) {
-      console.error("Login error:", err)
+      console.error("Signup error:", err)
       setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
@@ -63,8 +72,8 @@ export default function LoginPage() {
         <Card className="shadow-lg">
           <form onSubmit={handleSubmit}>
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold">Login</CardTitle>
-              <CardDescription>Enter your email and password to access your account</CardDescription>
+              <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+              <CardDescription>Enter your information to create an account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {error && (
@@ -72,6 +81,29 @@ export default function LoginPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
+
+              {success && (
+                <Alert>
+                  <AlertDescription>
+                    Your account has been created! Please check your email for verification instructions.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    placeholder="John Doe"
+                    className="pl-10"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -90,12 +122,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -114,16 +141,17 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <p className="text-xs text-muted-foreground">Password must be at least 6 characters long</p>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
+              <Button type="submit" className="w-full" disabled={loading || success}>
+                {loading ? "Creating account..." : "Sign Up"}
               </Button>
               <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link href="/signup" className="text-primary hover:underline">
-                  Sign up
+                Already have an account?{" "}
+                <Link href="/login" className="text-primary hover:underline">
+                  Login
                 </Link>
               </div>
             </CardFooter>

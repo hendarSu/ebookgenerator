@@ -1,11 +1,22 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 
-// Create a single supabase client for the entire application
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Singleton pattern for Supabase client
+let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Create a single supabase client for the entire application
+export function getSupabaseClient() {
+  if (supabaseInstance) return supabaseInstance
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+  supabaseInstance = createClient<Database>(supabaseUrl, supabaseAnonKey)
+  return supabaseInstance
+}
+
+// Export the singleton instance
+export const supabase = getSupabaseClient()
 
 // Server-side client with service role for admin operations
 export const createServerSupabaseClient = () => {

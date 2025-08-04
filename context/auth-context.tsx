@@ -1,19 +1,23 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import type { Session, User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
-import { Loader2 } from "lucide-react"
-import { createUserSettings } from "@/lib/user-settings-service"
+import { supabase } from "@/lib/supabase-client"
+
+interface User {
+  id: string
+  email?: string
+  user_metadata?: {
+    full_name?: string
+    avatar_url?: string
+  }
+}
 
 interface AuthContextType {
-  user: User | null
-  session: Session | null
-  isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string, name: string) => Promise<void>
+  isLoading: boolean
+  user: User | null
+  login: (email: string, password: string) => Promise<{ error: any }>
+  signup: (email: string, password: string, fullName: string) => Promise<{ error: any }>
   logout: () => Promise<void>
 }
 
@@ -21,195 +25,109 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
-  const pathname = usePathname()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Check if user is logged in on initial load
   useEffect(() => {
-    const checkAuth = async () => {
+    // Check active sessions and sets the user
+    const getSession = async () => {
       try {
-        // Get current session
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
+        setIsLoading(true)
+        const { data, error } = await supabase.auth.getSession()
 
         if (error) {
-          throw error
+          console.error("Error getting session:", error)
+          return
         }
 
-        if (session) {
-          setSession(session)
-          setUser(session.user)
-        } else {
-          setSession(null)
-          setUser(null)
-
-          // Allow access to public routes when not authenticated
-          const publicRoutes = ["/login", "/forgot-password", "/explore", "/"]
-
-          // Check if the current path starts with any of the public routes
-          const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
-
-          if (!isPublicRoute) {
-            router.push("/login")
-          }
+        if (data?.session) {
+          const { data: userData } = await supabase.auth.getUser()
+          setUser(userData.user)
+          setIsAuthenticated(true)
         }
       } catch (error) {
-        console.error("Auth check error:", error)
-        setSession(null)
-        setUser(null)
-
-        // Redirect to login on error, except for public routes
-        if (pathname !== "/login" && pathname !== "/explore" && !pathname.startsWith("/explore/")) {
-          router.push("/login")
-        }
+        console.error("Error in auth state change:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    checkAuth()
+    getSession()
 
-    // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session ? session.user : null)
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const { data } = await supabase.auth.getUser()
+        setUser(data.user)
+        setIsAuthenticated(true)
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
+      }
       setIsLoading(false)
     })
 
+    // Cleanup subscription on unmount
     return () => {
-      subscription.unsubscribe()
+      authListener.subscription.unsubscribe()
     }
-  }, [pathname, router])
+  }, [])
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true)
-
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-
-      if (error) {
-        throw error
-      }
-
-      // Redirect to projects page
-      router.push("/projects")
+      return { error }
     } catch (error) {
-      console.error("Login error:", error)
-      throw error
-    } finally {
-      setIsLoading(false)
+      console.error("Error during login:", error)
+      return { error }
     }
   }
 
-  const register = async (email: string, password: string, name: string) => {
-    setIsLoading(true)
-
+  const signup = async (email: string, password: string, fullName: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: name,
+            full_name: fullName,
           },
         },
       })
-
-      if (error) {
-        throw error
-      }
-
-      // Initialize user settings with default theme
-      if (data.user) {
-        await createUserSettings(data.user.id, { theme: "light" })
-      }
-
-      // After successful registration, sign in the user
-      await login(email, password)
+      return { error }
     } catch (error) {
-      console.error("Registration error:", error)
-      throw error
-    } finally {
-      setIsLoading(false)
+      console.error("Error during signup:", error)
+      return { error }
     }
   }
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-
-      if (error) {
-        throw error
-      }
-
-      setUser(null)
-      setSession(null)
-
-      // Redirect to login page
-      router.push("/login")
+      await supabase.auth.signOut()
     } catch (error) {
-      console.error("Logout error:", error)
+      console.error("Error during logout:", error)
     }
   }
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
+  const value = {
+    isAuthenticated,
+    isLoading,
+    user,
+    login,
+    signup,
+    logout,
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        isLoading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-// Update the useAuth function to handle the case when it's called outside the provider
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    // Instead of throwing an error, return a default context with isLoading=true
-    return {
-      user: null,
-      session: null,
-      isLoading: true,
-      isAuthenticated: false,
-      login: async () => {
-        console.error("Auth context not initialized")
-      },
-      register: async () => {
-        console.error("Auth context not initialized")
-      },
-      logout: async () => {
-        console.error("Auth context not initialized")
-      },
-    } as AuthContextType
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 }

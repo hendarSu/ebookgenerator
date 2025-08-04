@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/context/auth-context"
+import { AuthProvider } from "../context/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Navbar } from "@/components/navbar"
 import { usePathname } from "next/navigation"
